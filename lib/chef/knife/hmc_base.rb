@@ -14,8 +14,8 @@ require 'knife-hmc/version'
 class Chef
   class Knife
     module HmcBase
-    	
-	  # :nodoc:
+      
+      # :nodoc:
       #####################################################
       #  included
       #####################################################
@@ -26,25 +26,25 @@ class Chef
             require 'chef/json_compat'
             require 'chef/knife'
             require 'readline'
-            #require 'remote_hmc'
-			Chef::Knife.load_deps
+            require 'rbvppc'
+            Chef::Knife.load_deps
           end
 
           option :hmc_host,
                  :short => "-h HOST",
-                 :long => "--host HOST",
+                 :long => "--hmc_host HOST",
                  :description => "The fully qualified domain name of the HMC host",
                  :proc => Proc.new { |key| Chef::Config[:knife][:hmc_host] = key }
 
           option :hmc_username,
                  :short => "-U USERNAME",
-                 :long => "--userid USERNAME",
+                 :long => "--hmc_userid USERNAME",
                  :description => "The username for the HMC",
                  :proc => Proc.new { |key| Chef::Config[:knife][:hmc_username] = key }
 
           option :hmc_password,
                  :short => "-P PASSWORD",
-                 :long => "--password PASSWORD",
+                 :long => "--hmc_password PASSWORD",
                  :description => "The password for hmc",
                  :proc => Proc.new { |key| Chef::Config[:knife][:hmc_password] = key }
 
@@ -60,7 +60,7 @@ class Chef
         keys.each do |k|
           pretty_key = k.to_s.gsub(/_/, ' ').gsub(/\w+/){ |w| (w =~ /(ssh)|(aws)/i) ? w.upcase  : w.capitalize }
           if Chef::Config[:knife][k].nil?
-            errors << "You did not provided a valid '#{pretty_key}' value."
+            errors << "You did not provide a valid '#{pretty_key}' value."
           end
         end
 
@@ -79,6 +79,6 @@ class Chef
         rval
       end
 
-	end
+    end
   end
 end
