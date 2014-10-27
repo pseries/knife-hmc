@@ -17,7 +17,7 @@ class Chef
 
       include Knife::HmcBase
 
-      banner "knife hmc server delete SERVER (options)"
+      banner "knife hmc server delete (options)"
 
       option :purge,
         :short => "-P",
@@ -28,27 +28,27 @@ class Chef
 
       option :chef_node_name,
         :short => "-N NAME",
-        :long => "--node-name NAME",
+        :long => "--node_name NAME",
         :description => "The name of the node and client to delete, if it differs from the server name. Only has meaning when used with the '--purge' option."
 
       option :frame_name,
         :short => "-f NAME",
-        :long => "--frame-name NAME",
+        :long => "--frame_name NAME",
         :description => "Name of the Host in which the LPAR resides."
 
       option :lpar_name,
         :short => "-l NAME",
-        :long => "--lpar-name",
+        :long => "--lpar_name",
         :description => "Name of LPAR you wish to delete."
 
       option :vio1_name,
         :short => "-p NAME",
-        :long => "--primary-vio NAME",
+        :long => "--primary_vio NAME",
         :description => "Name of the primary vio."
 
       option :vio2_name,
         :short => "-s NAME",
-        :long => "--secondary-vio NAME",
+        :long => "--secondary_vio NAME",
         :description => "Name of the secondary vio."  
       def run
    		Chef::Log.debug("Deleting server...")
@@ -62,6 +62,7 @@ class Chef
         vio1 = Vio.new(hmc, get_config(:frame_name), get_config(:vio1_name))
         vio2 = Vio.new(hmc, get_config(:frame_name), get_config(:vio2_name))
         lpar.delete([vio1,vio2])
+        puts "LPAR destroyed"
         hmc.disconnect
 
       end
