@@ -19,22 +19,37 @@ class Chef
 
       banner "knife hmc image list (options)"
 
+      option :nim_host,
+             :short => "-n HOST",
+             :long => "--nim_host HOST",
+             :description => "The fully qualified domain name of the NIM server"
+
+      option :nim_user,
+             :short => "-l USER",
+             :long => "--nim_user USER",
+             :description => "The username for the NIM server"
+
+
+      option :nim_pass,
+             :short => "-m PASSWORD",
+             :long => "--nim_pass PASSWORD",
+             :description => "The password of the user specified in --nim_user"
+                 
+
       def run
-   		  Chef::Log.debug("Listing images...")
+        Chef::Log.debug("Listing images...")
 
-        validate!
+        validate!([:nim_host,:nim_user,:nim_pass])        
 
-        #
-        # Sample code to connect to hmc before running any commands
-        #
+        nim = Nim.new(get_config(:nim_host),get_config(:nim_user),{:password => get_config(:nim_pass)})
+        nim.connect
 
-        # hmc = Hmc.new(get_config(:hmc_host), get_config(:hmc_username) , {:password => get_config(:hmc_password)}) 
-        # hmc.connect
-
-        # TODO: Make the call here...
-
-        # hmc.disconnect
+        puts "Mksysb Image Names: "
+        nim.list_images.each do |image_name|
+          puts "#{image_name}"
+        end
         
+        nim.disconnect
       end
 
     end
