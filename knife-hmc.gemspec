@@ -6,8 +6,8 @@ require 'knife-hmc/version'
 Gem::Specification.new do |spec|
   spec.name          = "knife-hmc"
   spec.version       = Knife::Hmc::VERSION
-  spec.authors       = ["John J. Rofrano"]
-  spec.email         = ["rofrano@us.ibm.com"]
+  spec.authors       = ["John J. Rofrano,Christopher M. Wood, John F. Hutchinson"]
+  spec.email         = ["rofrano@us.ibm.com, woodc@us.ibm.com, jfhutchi@us.ibm.com"]
   spec.summary       = %q{IBM Hardware Management Console support for Chef's Knife Command}
   spec.description   = spec.summary
   spec.homepage      = "http://github.com/rofrano/knife-hmc"
