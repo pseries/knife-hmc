@@ -31,21 +31,34 @@ class Chef
         :long => "--node-name NAME",
         :description => "The name of the node and client to delete, if it differs from the server name. Only has meaning when used with the '--purge' option."
 
+      option :hmc_host,
+        :short => "-h HOST",
+        :long => "--hmc_host HOST",
+        :description => "The fully qualified domain name of the HMC."  
+
+      option :hmc_username,
+        :shot => "-u USERNAME",
+        :long => "--hmc_username USERNAME",
+        :description => "The user name to use on the HMC, preferably hscroot."
+
+      option :hmc_password,
+        :short => "-p PASSWORD",
+        :long  => "--hmc_password PASSWORD",
+        :description => "The password of the user provided in the :hmc_username option."
+        
       def run
    		Chef::Log.debug("Deleting server...")
 
-        validate!
-
-        #
-        # Sample code to connect to hmc before running any commands
-        #
-
-        # hmc = Hmc.new(get_config(:hmc_host), get_config(:hmc_username) , {:password => get_config(:hmc_password)}) 
-        # hmc.connect
-
-        # TODO: Make the call here...
-
-        # hmc.disconnect
+        validate!([:hmc_host,:hmc_username,:hmc_password])
+       
+        hmc = Hmc.new(get_config(:hmc_host), get_config(:hmc_username) , {:password => get_config(:hmc_password)}) 
+        hmc.connect
+        lpar_hash = hmc.get_lpar_options(get_config(:frame_name),get_config(:lpar_name))
+        lpar = Lpar.new(lpar_hash)
+        vio1 = Vio.new(hmc, get_config(:frame_name), get_config(:vio1_name))
+        vio2 = Vio.new(hmc, get_config(:frame_name), get_config(:vio2_name))
+        lpar.delete([vio1,vio2])
+        hmc.disconnect
 
       end
 
