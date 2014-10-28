@@ -53,20 +53,25 @@ class Chef
       def run
    		Chef::Log.debug("Deleting server...")
 
-        validate!([:frame_name,:lpar_name,:vio1_name,:vio2_name])
+        validate!([:frame_name,:lpar_name])
        
         hmc = Hmc.new(get_config(:hmc_host), get_config(:hmc_username) , {:password => get_config(:hmc_password)}) 
         hmc.connect
         lpar_hash = hmc.get_lpar_options(get_config(:frame_name),get_config(:lpar_name))
         lpar = Lpar.new(lpar_hash)
-        vio1 = Vio.new(hmc, get_config(:frame_name), get_config(:vio1_name))
-        vio2 = Vio.new(hmc, get_config(:frame_name), get_config(:vio2_name))
-        lpar.delete([vio1,vio2])
-        puts "LPAR destroyed"
+           
+        if get_config(:vio1_name).nil? and get_config(:vio2_name).nil?
+          lpar.delete()
+          puts "#{lpar_name} destroyed"
+        else
+          validate!([:vio1_name, :vio2_name])
+          vio1 = Vio.new(hmc, get_config(:frame_name), get_config(:vio1_name))
+          vio2 = Vio.new(hmc, get_config(:frame_name), get_config(:vio2_name))
+          lpar.delete([vio1,vio2])
+          puts "#{lpar_name} destroyed"
+        end
         hmc.disconnect
-
       end
-
     end
   end
 end
