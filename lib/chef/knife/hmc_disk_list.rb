@@ -95,6 +95,11 @@ class Chef
 
           if primary_vio_slot.nil? or secondary_vio_slot.nil? or adapter_cnt != 2
             #Could not determine which vSCSIs to use
+            error = "Unable to determine which vSCSI adapters have storage attached to it from #{primary_vio_name} and #{secondary_vio_name}\n" +
+                    "Cannot list disks attached to #{lpar_name}"
+            puts "#{error}"
+            ui.error(error)           
+            exit 1            
           end
 
           #Find the vhosts that hold this LPARs disks
