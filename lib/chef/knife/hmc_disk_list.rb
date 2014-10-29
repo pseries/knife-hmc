@@ -102,22 +102,8 @@ class Chef
           secondary_vhost = secondary_vio.find_vhost_given_virtual_slot(secondary_vio_slot)
 
           #Get the names (known to the VIOs) of the disks attached to the LPAR
-          vio1_disknames = primary_vio.get_attached_disks(primary_vhost)
-          vio2_disknames = secondary_vio.get_attached_disks(secondary_vhost)
-
-          #Collect Lun objects representing the disks on each VIO that
-          #are used by the LPAR
-          primary_vio.used_disks.each do |disk|
-            if vio1_disknames.include?(disk.name)
-              vio1_disks << disk
-            end
-          end
-
-          secondary_vio.used_disks.each do |disk|
-            if vio2_disknames.include?(disk.name)
-              vio2_disks << disk
-            end
-          end
+          vio1_disks = primary_vio.get_attached_disks(primary_vhost)
+          vio2_disks = secondary_vio.get_attached_disks(secondary_vhost)        
         elsif get_config(:only_available)
           #Show only available disks
           vio1_disks = primary_vio.available_disks
@@ -133,7 +119,7 @@ class Chef
           vio2_disks = secondary_vio.available_disks + secondary_vio.used_disks
         end
 
-        #List the disks in vio1_disks and vio2_disks
+        #List the disks populated in vio1_disks and vio2_disks
         print_header
 
         vio1_disks.each do |v1_disk|
@@ -148,8 +134,12 @@ class Chef
         
       end
 
+      ##################################################
+      # print_header
+      # => Prints table header for disk list
+      ##################################################
       def print_header
-        if validate(:lpar)
+        if validate([:lpar])
           puts "Listing information on all disks attached to #{get_config(:lpar)}\n"
         elsif get_config(:only_available)
           puts "Listing only available disks on this VIO Pair\n"
@@ -159,13 +149,18 @@ class Chef
           puts "Listing all disks on this VIO Pair\n"
         end
 
-        printf "%-20s %15s %15s %15s\n", "PVID", "Size (MB)", "Name (on #{get_config(:primary_vio)})", "Name (on #{get_config(:secondary_vio)})"
-        printf "-----------------------------------------------------------------------------------------------\n"
-
+        printf "%-20s %10s %20s %20s\n", "PVID", "Size (MB)", "Name (on #{get_config(:primary_vio)})", "Name (on #{get_config(:secondary_vio)})"
+        printf "-----------------------------------------------------------------------------------------\n"
       end
 
+      ##################################################
+      # print_line
+      # => Prints a single line of the output table
+      #    given two Lun objects representing the same
+      #    disk on a pair of VIOs
+      ##################################################
       def print_line(vio1_disk,vio2_disk)
-        printf "%-20s %15s %15s %15s\n", vio1_disk.pvid, "#{vio1_disk.size_in_mb} MB", vio1_disk.name, vio2_disk.name
+        printf "%-20s %10s %20s %20s\n", vio1_disk.pvid, "#{vio1_disk.size_in_mb} MB", vio1_disk.name, vio2_disk.name
       end
     end
   end
