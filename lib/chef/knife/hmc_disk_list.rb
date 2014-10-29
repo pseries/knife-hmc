@@ -17,15 +17,15 @@ class Chef
 
       include Knife::HmcBase
 
-      banner "knife hmc disk list -v1 VIONAME1 -v2 VIONAME2 [-l LPARNAME | -a | -x]"
+      banner "knife hmc disk list -r VIONAME1 -s VIONAME2 -f FRAMENAME [-l LPARNAME | -a | -x]"
 
       option :primary_vio,
-             :short => "-v1 VIONAME",
+             :short => "-r VIONAME",
              :long => "--prim_vio VIONAME",
              :description => "The LPAR name of the Primary VIO"
 
       option :secondary_vio,
-             :short => "-v2 VIONAME",
+             :short => "-s VIONAME",
              :long => "--second_vio VIONAME",
              :description => "The LPAR name of the Secondary VIO"
 
