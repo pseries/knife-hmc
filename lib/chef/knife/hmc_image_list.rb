@@ -17,7 +17,7 @@ class Chef
 
       include Knife::HmcBase
 
-      banner "knife hmc image list (options)"
+      banner "knife hmc image list --nim_host HOSTNAME --nim_user USER --nim_pass PASSWORD"
 
       option :nim_host,
              :short => "-n HOST",

@@ -16,7 +16,7 @@ class Chef
 
       include Knife::HmcBase
 
-      banner "knife hmc server list (options)"
+      banner "knife hmc server list [--frame FRAME]"
 
       option :frame,
              :short => "-f FRAME",
