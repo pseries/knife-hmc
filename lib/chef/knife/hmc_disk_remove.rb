@@ -59,6 +59,7 @@ class Chef
         vio2 = Vio.new(hmc, get_config(:frame_name), get_config(:vio2_name))
         #Remove disk by pvid
         vio1.unmap_by_pvid(vio2,get_config(:pvid))
+        puts "Successfully removed LUN with PVID #{get_config(:pvid)}"
         #Disconnect from HMC
         hmc.disconnect
         

@@ -66,42 +66,52 @@ class Chef
 
         #Get vSCSI Information
         lpar_vscsi = lpar.get_vscsi_adapters
-        first_vhost = nil
-        second_vhost = nil
+        first_slot = nil
+        second_slot = nil
         adapter_cnt = 0
+
         if lpar_vscsi.empty? == true
           #Add vSCSI Adapters
           lpar.add_vscsi(vio1)
           lpar.add_vscsi(vio2)
+          lpar_vscsi = lpar.get_vscsi_adapters
         else
           lpar_vscsi.each do |adapter|
-            if adapter.remote_lpar_name == vio1.Name
-              first_vhost = adapter.remote_slot_num
+            if adapter.remote_lpar_name == vio1.name
+              first_slot = adapter.remote_slot_num
               adapter_cnt += 1
-            elsif adapter.remote_lpar_name == vio2.Name
-              second_vhost = adapter.remote_slot_num
+            elsif adapter.remote_lpar_name == vio2.name
+              second_slot = adapter.remote_slot_num
               adapter_cnt += 1
             end
           end 
-          if first_vhost.nil? or second_vhost.nil? or adapter_cnt != 2
-            #vSCSIs not linked to VIOs specified adding new ones
-            lpar.add_vscsi(vio1)
-            lpar.add_vscsi(vio2)
-            lpar_vscsi = lpar.get_vscsi_adapters
-            #Find the vHosts
-            first_vhost = vio1.find_vhost_given_virtual_slot(lpar_vscsi[0].remote_slot_num)
-            second_vhost = vio2.find_vhost_given_virtual_slot(lpar_vscsi[1].remote_slot_num)
+
+          if first_slot.nil? or second_slot.nil? or adapter_cnt != 2
+            #Could not determine which vSCSIs to use
+            error = "Unable to determine which vSCSI adapters to use"
+            puts "#{error}"
+            ui.error(error)
+            exit 1         
           end
-          if validate([:volume_group])
-            if get_config(:volume_group).to_s.downcase == "rootvg"
-              vio1.map_single_disk_by_size(first_vhost,vio2,second_vhost,get_config(:size).to_i)        
-            else
-              vio1.map_by_size(first_vhost,vio2,second_vhost,get_config(:size).to_i)
-            end
+        end  
+        
+        #Find the vHosts
+        first_vhost = vio1.find_vhost_given_virtual_slot(lpar_vscsi[0].remote_slot_num)
+        second_vhost = vio2.find_vhost_given_virtual_slot(lpar_vscsi[1].remote_slot_num)
+        
+        #Check for volume group flag and add LUN to LPAR
+        if validate([:volume_group])
+          if get_config(:volume_group).to_s.downcase == "rootvg"
+            vio1.map_single_disk_by_size(first_vhost,vio2,second_vhost,get_config(:size).to_i)
+            puts "Successfully attached LUN to #{get_config(:lpar_name)}"        
           else
             vio1.map_by_size(first_vhost,vio2,second_vhost,get_config(:size).to_i)
+            puts "Successfully attached LUN(s) to #{get_config(:lpar_name)}"  
           end
-        end
+        else
+          vio1.map_by_size(first_vhost,vio2,second_vhost,get_config(:size).to_i)
+          puts "Successfully attached LUN(s) to #{get_config(:lpar_name)}" 
+        end       
         hmc.disconnect        
       end
     end

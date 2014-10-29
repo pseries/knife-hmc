@@ -62,13 +62,13 @@ class Chef
            
         if get_config(:vio1_name).nil? and get_config(:vio2_name).nil?
           lpar.delete()
-          puts "#{lpar_name} destroyed"
+          puts "#{get_config(:lpar_name)} destroyed"
         else
           validate!([:vio1_name, :vio2_name])
           vio1 = Vio.new(hmc, get_config(:frame_name), get_config(:vio1_name))
           vio2 = Vio.new(hmc, get_config(:frame_name), get_config(:vio2_name))
           lpar.delete([vio1,vio2])
-          puts "#{lpar_name} destroyed"
+          puts "#{get_config(:lpar_name)} destroyed"
         end
         hmc.disconnect
       end
