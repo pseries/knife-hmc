@@ -13,7 +13,7 @@ require 'chef/knife/hmc_base'
 
 class Chef
   class Knife
-    class HmcDiskCreate < Knife
+    class HmcDiskAdd < Knife
 
       include Knife::HmcBase
 
@@ -76,16 +76,16 @@ class Chef
             #If they are not then add 
             lpar_vscsi = lpar.get_vscsi_adapters
             #Find the vHosts
-first_vhost = vio1.find_vhost_given_virtual_slot(lpar_vscsi[0].remote_slot_num)
-second_vhost = vio2.find_vhost_given_virtual_slot(lpar_vscsi[1].remote_slot_num)
+            first_vhost = vio1.find_vhost_given_virtual_slot(lpar_vscsi[0].remote_slot_num)
+            second_vhost = vio2.find_vhost_given_virtual_slot(lpar_vscsi[1].remote_slot_num)
 
 
-         vio1 = Vio.new(hmc, get_config(:frame_name), get_config(:vio1_name))
-         vio2 = Vio.new(hmc, get_config(:frame_name), get_config(:vio2_name))
-         if get_config(:volume_group).downcase == "rootvg"
-            vio1.map_single_disk_by_size
-
-        # TODO: Make the call here...
+           vio1 = Vio.new(hmc, get_config(:frame_name), get_config(:vio1_name))
+           vio2 = Vio.new(hmc, get_config(:frame_name), get_config(:vio2_name))
+           if get_config(:volume_group).downcase == "rootvg"
+             vio1.map_single_disk_by_size        
+            end
+          end
 
         hmc.disconnect        
       end
