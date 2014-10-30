@@ -38,13 +38,13 @@ class Chef
 
           option :hmc_username,
                  :short => "-U USERNAME",
-                 :long => "--hmc_username USERNAME",
+                 :long => "--hmc_user USERNAME",
                  :description => "The username for the HMC",
                  :proc => Proc.new { |key| Chef::Config[:knife][:hmc_username] = key }
 
           option :hmc_password,
                  :short => "-P PASSWORD",
-                 :long => "--hmc_password PASSWORD",
+                 :long => "--hmc_pass PASSWORD",
                  :description => "The password for hmc",
                  :proc => Proc.new { |key| Chef::Config[:knife][:hmc_password] = key }
 
