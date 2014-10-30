@@ -139,9 +139,9 @@ class Chef
         #need to check for the optional flags. And Deploying the OS is optional we
         #also need to check for those.
         if validate([:min_mem,:max_mem,:min_vcpu,:max_vcpu,:min_proc,:max_proc])
-          lpar = Lpar.new({hmc,:min_proc => get_config(:min_proc),:des_proc => get_config(:des_proc), :max_proc => get_config(:max_proc), :min_mem => get_config(:min_mem), :des_mem => get_config(:des_mem), :max_mem => get_config(:max_mem), :min_vcpu =>  get_config(:min_vcpu), :des_vcpu => get_config(:des_vcpu), :max_vcpu => get_config(:max_vcpu), :frame => get_config(:frame_name), :name => get_config(:lpar_name)})
+          lpar = Lpar.new({:hmc => hmc,:min_proc => get_config(:min_proc),:des_proc => get_config(:des_proc), :max_proc => get_config(:max_proc), :min_mem => get_config(:min_mem), :des_mem => get_config(:des_mem), :max_mem => get_config(:max_mem), :min_vcpu =>  get_config(:min_vcpu), :des_vcpu => get_config(:des_vcpu), :max_vcpu => get_config(:max_vcpu), :frame => get_config(:frame_name), :name => get_config(:lpar_name)})
         else
-          lpar = Lpar.new({hmc,:des_proc => get_config(:des_proc),:des_mem => get_config(:des_mem),:des_vcpu => get_config(:des_vcpu), :frame => get_config(:frame_name), :name => get_config(:lpar_name)})
+          lpar = Lpar.new({:hmc => hmc,:des_proc => get_config(:des_proc),:des_mem => get_config(:des_mem),:des_vcpu => get_config(:des_vcpu), :frame => get_config(:frame_name), :name => get_config(:lpar_name)})
         end
 
         image_deploy = false
