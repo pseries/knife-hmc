@@ -183,7 +183,7 @@ class Chef
           second_vhost = vio2.find_vhost_given_virtual_slot(lpar_vscsi[1].remote_slot_num)
 
           #Attach a Disk
-          vio1.map_single_disk_by_size(first_vhost,vio2,second_vhost,get_config(:size))
+          vio1.map_single_disk_by_size(first_vhost,vio2,second_vhost,get_config(:size).to_i)
           puts "LUN attached to #{get_config(:lpar_name)}."
 
           #Attach vNIC, will activate and deactive LPAR to assign MAC address to NIC
