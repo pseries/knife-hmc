@@ -17,7 +17,7 @@ class Chef
 
       include Knife::HmcBase
 
-      banner "knife hmc server delete (options)"
+      banner "knife hmc server delete --frame NAME --lpar NAME --primary_vio NAME --secondary_vio NAME"
 
       option :purge,
         :short => "-P",
@@ -33,12 +33,12 @@ class Chef
 
       option :frame_name,
         :short => "-f NAME",
-        :long => "--frame_name NAME",
+        :long => "--frame NAME",
         :description => "Name of the Host in which the LPAR resides."
 
       option :lpar_name,
         :short => "-l NAME",
-        :long => "--lpar_name",
+        :long => "--lpar",
         :description => "Name of LPAR you wish to delete."
 
       option :vio1_name,

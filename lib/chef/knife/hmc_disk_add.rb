@@ -21,12 +21,12 @@ class Chef
 
       option :frame_name,
         :short => "-f NAME",
-        :long => "--frame_name NAME",
+        :long => "--frame NAME",
         :description => "Name of the Host in which the LPAR resides."
 
       option :lpar_name,
         :short => "-l NAME",
-        :long => "--lpar_name",
+        :long => "--lpar",
         :description => "Name of LPAR you wish to delete."
 
       option :vio1_name,
