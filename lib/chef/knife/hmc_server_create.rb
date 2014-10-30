@@ -148,7 +148,7 @@ class Chef
         first_bootscript = nil
         if validate([:nim_host,:nim_username,:nim_password,:image,:ip_address,:size,:vlan_id])
           image_deploy = true
-          nim = Nim.new(get_config(:nim_host,get_config(:nim_username), {:password => get_config(:nim_password)})
+          nim = Nim.new(get_config(:nim_host),get_config(:nim_username), {:password => get_config(:nim_password)})
         end
 
         if image_deploy == true
