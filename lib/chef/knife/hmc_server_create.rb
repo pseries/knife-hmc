@@ -176,7 +176,7 @@ class Chef
           puts "vSCSI Adapters added to #{get_config(:lpar_name)}."
 
           #Get vSCSI information
-          lpar_vscsi = lpar.get_vscsi adapters
+          lpar_vscsi = lpar.get_vscsi_adapters
 
           #Find the vHosts
           first_vhost = vio1.find_vhost_given_virtual_slot(lpar_vscsi[0].remote_slot_num)
