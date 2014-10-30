@@ -192,7 +192,7 @@ class Chef
 
           ##Deploy Mksysb, booting LPAR
           nim.deploy_image(lpar,get_config(:image),first_bootscript) do |nimIp,gw,snm| 
-             hmc.lpar_net_boot(nimIp,get_config(:ip_address,gw,snm,lpar)
+             hmc.lpar_net_boot(nimIp,get_config(:ip_address),gw,snm,lpar)
           end
           puts "#{get_config(:image)} deployed to #{get_config(:lpar_name)}."
         end
