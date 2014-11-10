@@ -21,12 +21,12 @@ class Chef
 
       option :primary_vio,
              :short => "-r VIONAME",
-             :long => "--prim_vio VIONAME",
+             :long => "--primary_vio VIONAME",
              :description => "The LPAR name of the Primary VIO"
 
       option :secondary_vio,
              :short => "-s VIONAME",
-             :long => "--second_vio VIONAME",
+             :long => "--secondary_vio VIONAME",
              :description => "The LPAR name of the Secondary VIO"
 
       option :frame,
@@ -42,11 +42,15 @@ class Chef
       option :only_available,
              :short => "-a",
              :long => "--available",
+             :boolean => true,
+             :default => false,
              :description => "List ONLY the available disks in this VIO pair (optional)"
 
       option :only_used,
              :short => "-x",
              :long => "--used",
+             :boolean => true,
+             :default => false,
              :description => "List ONLY the used disks in this VIO pair (optional)"
 
 

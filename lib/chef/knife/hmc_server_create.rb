@@ -11,11 +11,18 @@
 
 require 'chef/knife/hmc_base'
 
+
 class Chef
   class Knife
     class HmcServerCreate < Knife
 
       include Knife::HmcBase
+
+      deps do
+        require 'net/scp'
+        require 'chef/knife/bootstrap'
+        Chef::Knife::Bootstrap.load_deps
+      end
 
       banner "knife hmc server create (options)"
 
@@ -40,7 +47,7 @@ class Chef
         :description => "The name of the mksysb image on the NIM."
 
       option :fb_script,
-        :short => "-f NAME",
+        :short => "-d NAME",
         :long => "--fb_script NAME",
         :description => "Name of the first boot script to use."
 
@@ -124,6 +131,21 @@ class Chef
         :long => "--size SIZEINGB",
         :description => "Size in GB of the LUN to use for the rootvg."
 
+      option :register_node,
+        :short => "-r CHEF_SERVER_URL",
+        :long => "--register_node CHEF_SERVER_URL",
+        :description => "Bootstraps this server as a Chef node and registers it with the specified Chef server"
+
+      option :bootstrap_user,
+        :short => "-u BOOTSTRAP_USER",
+        :long => "--bootstrap_user BOOTSTRAP_USER",
+        :description => "User to bootstrap the Chef Node as (if not specified, assumed to be 'root'). Completely ignored if --register_node isn't used"
+
+      option :bootstrap_pass,
+        :short => "-w BOOTSTRAP_PASS",
+        :long => "--bootstrap_pass BOOTSTRAP_PASS",
+        :description => "Password to use on the client LPAR when bootstrapping it. Ignored if --register_node is not specified"
+      
 
       def run
      		Chef::Log.debug("Creating server...")
@@ -179,6 +201,8 @@ class Chef
           lpar_vscsi = lpar.get_vscsi_adapters
 
           #Find the vHosts
+          #TO-DO: Need to update the logic here. 1st element doesn't necessarily
+          #have to map to the 1st VIO's vSCSI.
           first_vhost = vio1.find_vhost_given_virtual_slot(lpar_vscsi[0].remote_slot_num)
           second_vhost = vio2.find_vhost_given_virtual_slot(lpar_vscsi[1].remote_slot_num)
 
@@ -195,17 +219,153 @@ class Chef
              hmc.lpar_net_boot(nimIp,get_config(:ip_address),gw,snm,lpar)
           end
           puts "#{get_config(:image)} deployed to #{get_config(:lpar_name)}."
-        end
-       	
-        #Close connection 
-        hmc.disconnect
-        puts "Disconnected from #{get_config(:hmc_host)}."
+        end       	
+        
         if image_deploy == true
           nim.disconnect
           puts "Disconnected from #{get_config(:nim_host)}."
+
+          #Check to see if the :register_node option has been specified
+          #since we can only connect to bootstrap this server if it has
+          #a working OS on it.
+          if validate([:register_node])
+            #Branch here in case we can use Chef::Knife::Bootstrap
+            #to handle this sometime in the future. For now, hardcode the
+            #manual bootstrap
+            manual_bootstrap = true
+
+            #Wait here until the client is alive
+            print "Bootstrapping client. Waiting for sshd..."
+            print "." until tcp_ssh_alive(get_config(:ip_address))
+            puts "done\nInitiating bootstrap."
+
+            if manual_bootstrap
+              manual_bootstrap_for_node
+            else
+              bootstrap_for_node
+            end
+          end
         end
+
+        #Close connection 
+        hmc.disconnect
+        puts "Disconnected from #{get_config(:hmc_host)}."
+
         puts "Successfully created #{get_config(:lpar_name)}."
       end
+
+      #Manually execute the Chef bootstrap of an AIX server
+      def manual_bootstrap_for_node
+        validate!([:bootstrap_pass])
+
+        #Where the validation pem and chef-client exist on
+        #the chef workstation this is run from
+        validation_pem_path = Chef::Config[:validation_key]
+        puts "Using client key #{validation_pem_path}"
+        chef_client_path = Chef::Config[:knife][:chef_client_aix_path]
+        puts "Using chef-client located in #{chef_client_path}"
+
+        if validation_pem_path.nil? or chef_client_path.nil?
+          puts "No client validation pem or chef-client installable specified in knife.rb. Skipping Chef Bootstrap..."
+          return nil
+        end
+
+        #Where to place these files on the target server
+        remote_chef_client_path = "/tmp/2014-02-06-chef.11.10.0.0.bff"
+        remote_validation_pem_path = "/etc/chef/validation.pem"
+
+        #For some reason, Net::SSH and Net::SCP only work on
+        #AIX using :kex => "diffie-hellman-group1-sha1" and
+        # :encryption => ["blowfish-cbc", "3des-cbc"]
+        # :paranoid => false (avoids host key verification)
+        Net::SSH.start(get_config(:ip_address), 
+                       get_config(:bootstrap_user) || "root", 
+                       :password => get_config(:bootstrap_pass), 
+                       :kex => "diffie-hellman-group1-sha1",
+                       :encryption => ["blowfish-cbc", "3des-cbc"],
+                       :paranoid => false) do |ssh|     
+
+          #Copy the chef-client .bff file to the client machine in /tmp
+          puts "Copying chef client binary to client"
+          ssh.scp.upload!(chef_client_path, remote_chef_client_path)
+
+          #Run the install command
+          puts "Running chef client install"
+          output = ssh.exec!("installp -aYFq -d #{remote_chef_client_path} chef")
+          Chef::Log.debug("Chef Client install output:\n#{output}")
+
+          #Run the configure client command
+          puts "Running knife configure client command"
+          output = ssh.exec!("knife configure client -s #{get_config(:register_node)} /etc/chef")
+          Chef::Log.debug("Knife Configure output:\n#{output}")
+
+          #Copy the validation key to /etc/chef on the client
+          puts "Uploading validation.pem to client"
+          ssh.scp.upload!(validation_pem_path, remote_validation_pem_path)
+
+          #Edit /etc/chef/client.rb so that it points at the location of the validator
+          puts "Adding validator key path to client.rb"
+          cmd = %Q{echo "validator_key '#{remote_validation_pem_path}'" >> /etc/chef/client.rb}
+          output = ssh.exec!(cmd)
+          Chef::Log.debug("#{output}")
+
+          #Register the client node with the Chef server, by running chef-client
+          #Add additional handling of this command to determine if the chef-client
+          #run finished successfully or not.
+          puts "Running chef-client to register as a Chef node"
+          output = ""
+          stderr_out = ""
+          exit_code = nil
+          ssh.exec("chef-client") do |ch, success|
+            unless success
+              abort "FAILED: chef-client command failed to execute on client"
+            end
+            ch.on_data do |ch,data|
+              output+=data
+            end
+            ch.on_extended_data do |ch,type,data|
+              stderr_out+=data
+            end
+            ch.on_request("exit-status") do |ch,data|
+              exit_code = data.read_long
+            end
+          end
+          ssh.loop
+          if exit_code != 0
+            puts "Initial chef-client run failed. Please verify client settings and rerun chef-client to register this server as a node with #{get_config(:register_node)}"
+            return nil
+          end
+          Chef::Log.debug("chef-client command output:\n#{output}")
+        end
+      end
+
+      #Bootstrapping a Chef node using all Chef faculties
+      #TO-DO: fix up the body of this once normal bootstrap
+      #works on AIX nodes.
+      def bootstrap_for_node
+        bootstrap = Chef::Knife::Bootstrap.new
+        bootstrap.name_args = [config[:fqdn]]
+        bootstrap.config[:run_list] = get_config(:run_list).split(/[\s,]+/)
+        bootstrap.config[:secret_file] = get_config(:secret_file)
+        bootstrap.config[:hint] = get_config(:hint)
+        bootstrap.config[:ssh_user] = get_config(:ssh_user)
+        bootstrap.config[:ssh_password] = get_config(:ssh_password)
+        bootstrap.config[:ssh_port] = get_config(:ssh_port)
+        bootstrap.config[:identity_file] = get_config(:identity_file)
+        bootstrap.config[:chef_node_name] = get_config(:chef_node_name)
+        bootstrap.config[:prerelease] = get_config(:prerelease)
+        bootstrap.config[:bootstrap_version] = get_config(:bootstrap_version)
+        bootstrap.config[:distro] = get_config(:distro)
+        bootstrap.config[:use_sudo] = true unless get_config(:ssh_user) == 'root'
+        bootstrap.config[:template_file] = get_config(:template_file)
+        bootstrap.config[:environment] = get_config(:environment)
+        bootstrap.config[:first_boot_attributes] = get_config(:first_boot_attributes)
+        bootstrap.config[:log_level] = get_config(:log_level)
+        # may be needed for vpc_mode
+        bootstrap.config[:no_host_key_verify] = get_config(:no_host_key_verify)
+        bootstrap
+      end
+
     end
   end
 end

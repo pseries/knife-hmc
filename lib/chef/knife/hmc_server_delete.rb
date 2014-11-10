@@ -11,6 +11,10 @@
 
 require 'chef/knife/hmc_base'
 
+# Needed by the '--purge' deletion option
+require 'chef/node'
+require 'chef/api_client'
+
 class Chef
   class Knife
     class HmcServerDelete < Knife
@@ -50,8 +54,19 @@ class Chef
         :short => "-s NAME",
         :long => "--secondary_vio NAME",
         :description => "Name of the secondary vio."  
+
+      #Extracted from Chef::Knife.delete_object.
+      #That function requires an extra confirmation before
+      #proceeding, which seems overly cautious of an operation
+      #that will destroy the server that the node represents.
+      def destroy_chef_node(objectClass,name,type)
+        object = objectClass.load(name)
+        object.destroy
+        puts "Deleted #{type} #{name}"
+      end
+
       def run
-   		Chef::Log.debug("Deleting server...")
+   		  Chef::Log.debug("Deleting server...")
 
         validate!([:frame_name,:lpar_name])
        
@@ -70,6 +85,19 @@ class Chef
           lpar.delete([vio1,vio2])
           puts "#{get_config(:lpar_name)} destroyed"
         end
+
+        Chef::Log.debug("Server #{lpar.name} has been deleted.")
+
+        #If :purge option was specified, delete the Chef node that
+        #represents the LPAR we just deleted
+        if get_config(:purge)
+          Chef::Log.debug("Removing Chef node for #{lpar.name}")
+          node_name = get_config(:chef_node_name) || lpar.name
+          puts "Removing Chef node for #{lpar.name}"
+          destroy_chef_node(Chef::Node, node_name, "node")
+          destroy_chef_node(Chef::ApiClient, node_name, "client")
+        end
+
         hmc.disconnect
       end
     end

@@ -27,6 +27,7 @@ class Chef
             require 'chef/knife'
             require 'readline'
             require 'rbvppc'
+            require 'netaddr'
             Chef::Knife.load_deps
           end
 
@@ -49,6 +50,35 @@ class Chef
                  :proc => Proc.new { |key| Chef::Config[:knife][:hmc_password] = key }
 
         end
+      end
+
+      #####################################################
+      #  tcp_ssh_alive
+      #  Returns true if the hostname specified is
+      #  accepting SSH connections. Returns false otherwise
+      #####################################################
+      def tcp_ssh_alive(hostname,port=22)
+        tcp_socket = TCPSocket.new(hostname, port)
+        readable = IO.select([tcp_socket], nil, nil, 5)
+        if readable
+          Chef::Log.debug("sshd accepting connections on #{hostname}, banner is #{tcp_socket.gets}")
+          true
+        else
+          false
+        end
+        
+        rescue Errno::ETIMEDOUT
+          false
+        rescue Errno::EPERM
+          false
+        rescue Errno::ECONNREFUSED
+          sleep 2
+          false
+        rescue Errno::EHOSTUNREACH, Errno::ENETUNREACH
+          sleep 2
+          false
+        ensure
+          tcp_socket && tcp_socket.close
       end
 
       #####################################################
