@@ -101,12 +101,3 @@ Use of this software requires runtime dependencies.  Those dependencies and thei
 
 * [net-ssh](https://github.com/net-ssh/net-ssh/) - LICENSE: [MIT](https://github.com/net-ssh/net-ssh/blob/master/LICENSE.txt)
 * [net-scp](https://github.com/net-ssh/net-scp/) - LICENSE: [MIT](https://github.com/net-ssh/net-scp/blob/master/LICENSE.txt)
-
-
---
-> Authors:: Christopher Wood (<woodc@us.ibm.com>)
->           John Hutchinston (<jfhutchi@us.ibm.com>)
->
-> © Copyright IBM Corporation 2014.
->
-> LICENSE: Apache 2.0 (http://www.apache.org/licenses/)
