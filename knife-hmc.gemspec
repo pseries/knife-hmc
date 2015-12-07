@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ["John J. Rofrano,Christopher M. Wood, John F. Hutchinson"]
   spec.email         = ["rofrano@us.ibm.com, woodc@us.ibm.com, jfhutchi@us.ibm.com"]
   spec.summary       = %q{IBM Hardware Management Console support for Chef's Knife Command}
-  spec.description   = spec.summary
+  spec.description   = "Knife plugin for use with IBM Hardware Management Console"
   spec.homepage      = "http://github.com/pseries/knife-hmc"
   spec.license       = "MIT"
 
@@ -18,7 +18,7 @@ Gem::Specification.new do |spec|
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ["lib"]
 
-  spec.add_dependency("rbvppc", "~> 1.0.0")
+  spec.add_runtime_dependency("rbvppc", "~> 1.0.0")
 
   spec.add_development_dependency "bundler", "~> 1.5"
   spec.add_development_dependency "rake", "~> 0"
